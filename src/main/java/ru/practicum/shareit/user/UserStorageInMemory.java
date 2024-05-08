@@ -3,13 +3,13 @@ package ru.practicum.shareit.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exeption.ConflictException;
+import ru.practicum.shareit.exeption.NotFoundException;
 import ru.practicum.shareit.user.model.User;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -28,12 +28,12 @@ public class UserStorageInMemory implements UserDao {
     }
 
     @Override
-    public Optional<User> getById(Long id) {
+    public User getById(Long id) {
         if (!users.containsKey(id)) {
-            return Optional.empty();
+            throw new NotFoundException(String.format("Пользователь с id = %d не найден", id));
         }
 
-        return Optional.of(users.get(id));
+        return users.get(id);
     }
 
     @Override

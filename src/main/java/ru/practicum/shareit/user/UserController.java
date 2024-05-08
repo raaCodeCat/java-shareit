@@ -32,7 +32,7 @@ public class UserController {
     public List<UserDto> getAllUsers() {
         log.info("Получен запрос GET /users.");
 
-        return UserMapper.toUserDto(userService.get());
+        return userService.get();
     }
 
     /**
@@ -42,7 +42,7 @@ public class UserController {
     public UserDto getUserById(@PathVariable Long id) {
         log.info("Получен запрос GET /users/{}.", id);
 
-        return UserMapper.toUserDto(userService.getById(id));
+        return userService.getById(id);
     }
 
     /**
@@ -52,9 +52,7 @@ public class UserController {
     public UserDto addUser(@RequestBody @Valid UserDto userDto) {
         log.info("Получен запрос POST /users.");
 
-        User user = UserMapper.fromUserDto(userDto);
-
-        return UserMapper.toUserDto(userService.create(user));
+        return userService.create(userDto);
     }
 
     /**
@@ -64,10 +62,9 @@ public class UserController {
     public UserDto updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
         log.info("Получен запрос PATCH /users/{}.", id);
 
-        User user = UserMapper.fromUserDto(userDto);
-        user.setId(id);
+        userDto.setId(id);
 
-        return UserMapper.toUserDto(userService.update(user));
+        return userService.update(userDto);
     }
 
     /**

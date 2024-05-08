@@ -2,7 +2,6 @@ package ru.practicum.shareit.user;
 
 import ru.practicum.shareit.user.model.User;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * DAO для работы с {@link User}.
@@ -10,7 +9,7 @@ import java.util.Optional;
 public interface UserDao {
     List<User> get();
 
-    Optional<User> getById(Long id);
+    User getById(Long id);
 
     User create(User user);
 

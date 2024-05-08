@@ -35,7 +35,7 @@ public class ItemController {
     public List<ItemDto> getUserItems(@RequestHeader(SHARER) Long userId) {
         log.info("Получен запрос GET /items, от пользователя {}.", userId);
 
-        return ItemMapper.toItemDto(itemService.getUserItems(userId));
+        return itemService.getUserItems(userId);
     }
 
     /**
@@ -45,7 +45,7 @@ public class ItemController {
     public ItemDto getItemById(@RequestHeader(SHARER) Long userId, @PathVariable Long itemId) {
         log.info("Получен запрос GET /items/{}, от пользователя {}.", itemId, userId);
 
-        return ItemMapper.toItemDto(itemService.getItemById(itemId));
+        return itemService.getItemById(itemId);
     }
 
     /**
@@ -55,7 +55,7 @@ public class ItemController {
     public List<ItemDto> searchItem(@RequestHeader(SHARER) Long userId, @RequestParam String text) {
         log.info("Получен запрос GET /items/search, от пользователя {}.", userId);
 
-        return ItemMapper.toItemDto(itemService.searchItems(text));
+        return itemService.searchItems(text);
     }
 
     /**
@@ -66,9 +66,7 @@ public class ItemController {
                             @RequestBody @Valid ItemDto itemDto) {
         log.info("Получен запрос POST /items, от пользователя {}.", userId);
 
-        Item item = ItemMapper.fromItemDto(itemDto);
-
-        return ItemMapper.toItemDto(itemService.create(userId, item));
+        return itemService.create(userId, itemDto);
     }
 
     /**
@@ -80,9 +78,8 @@ public class ItemController {
                               @RequestBody ItemDto itemDto) {
         log.info("Получен запрос PATCH /items, от пользователя {}.", userId);
 
-        Item item = ItemMapper.fromItemDto(itemDto);
-        item.setId(itemId);
+        itemDto.setId(itemId);
 
-        return ItemMapper.toItemDto(itemService.update(userId, item));
+        return itemService.update(userId, itemDto);
     }
 }

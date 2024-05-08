@@ -2,12 +2,12 @@ package ru.practicum.shareit.item;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.exeption.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -27,12 +27,12 @@ public class ItemStorageInMemory implements ItemDao {
     }
 
     @Override
-    public Optional<Item> getById(Long id) {
+    public Item getById(Long id) {
         if (!items.containsKey(id)) {
-            return Optional.empty();
+            throw new NotFoundException(String.format("Вещь с itemId = %d не найден", id));
         }
 
-        return Optional.of(items.get(id));
+        return items.get(id);
     }
 
     @Override

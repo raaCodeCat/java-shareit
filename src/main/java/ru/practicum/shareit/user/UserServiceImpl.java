@@ -3,10 +3,9 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exeption.NotFoundException;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Сервис для работы с {@link User}.
@@ -18,38 +17,37 @@ public class UserServiceImpl implements UserService {
     private final UserDao userDao;
 
     @Override
-    public List<User> get() {
+    public List<UserDto> get() {
         log.info("Запрошен список всех пользователей");
 
-        return userDao.get();
+        return UserMapper.toUserDto(userDao.get());
     }
 
     @Override
-    public User getById(Long id) {
+    public UserDto getById(Long id) {
         log.info("Запрошен пользователь с id = {}", id);
 
-        Optional<User> userOptional = userDao.getById(id);
-        if (userOptional.isEmpty()) {
-            throw new NotFoundException(String.format("Пользователь с id = %d не найден", id));
-        }
-
-        return userOptional.get();
+        return UserMapper.toUserDto(userDao.getById(id));
     }
 
     @Override
-    public User create(User user) {
-        log.info("Попытка добавить пользователя {}", user);
+    public UserDto create(UserDto userDto) {
+        log.info("Попытка добавить пользователя {}", userDto);
 
-        return userDao.create(user);
+        User user = UserMapper.fromUserDto(userDto);
+
+        return UserMapper.toUserDto(userDao.create(user));
     }
 
     @Override
-    public User update(User user) {
-        log.info("Попытка обновить пользователя {}", user);
+    public UserDto update(UserDto userDto) {
+        log.info("Попытка обновить пользователя {}", userDto);
+
+        User user = UserMapper.fromUserDto(userDto);
 
         checkExistsUserById(user.getId());
 
-        return userDao.update(user);
+        return UserMapper.toUserDto(userDao.update(user));
     }
 
     @Override
@@ -61,10 +59,6 @@ public class UserServiceImpl implements UserService {
     }
 
     private void checkExistsUserById(Long id) {
-        Optional<User> userOptional = userDao.getById(id);
-
-        if (userOptional.isEmpty()) {
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
+        userDao.getById(id);
     }
 }
