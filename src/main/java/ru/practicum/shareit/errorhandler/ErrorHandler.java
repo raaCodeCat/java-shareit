@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.practicum.shareit.exeption.BadRequestException;
 import ru.practicum.shareit.exeption.ConflictException;
 import ru.practicum.shareit.exeption.NotFoundException;
@@ -60,6 +61,23 @@ public class ErrorHandler {
         errors.put("error", exception.getMessage());
 
         return errors;
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public Map<String, String> handleIternalServerError(MethodArgumentTypeMismatchException exception) {
+        Class<?> type = exception.getRequiredType();
+        String message;
+
+        assert type != null;
+        if (type.isEnum() && type.getName().equals("ru.practicum.shareit.booking.BookingState")) {
+            message = "Unknown state: UNSUPPORTED_STATUS";
+        } else {
+            message = String.format("Параметр %s должен быть типом %s", exception.getName(), type.getName());
+        }
+
+        log.info("Ошибка 500: {}", message);
+        return Map.of("error", message);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
