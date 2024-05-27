@@ -1,12 +1,11 @@
 package ru.practicum.shareit.booking.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("select b " +
@@ -42,12 +41,35 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "order by b.startDt desc")
     List<Booking> getBookingsByOwner(Long userId, String state);
 
-    Optional<Booking> findFirstByItemIdAndStartDtBeforeAndStatusIsNotOrderByEndDtDescIdAsc(
-            Long itemId,LocalDateTime dt, BookingStatus status);
+    @Query("select b " +
+            "from Booking as b " +
+            "inner join b.item as i " +
+            "where " +
+            "i.id in (?1) " +
+            "and b.startDt < ?2 " +
+            "and b.status != 'REJECTED'")
+    List<Booking> findLastBookingByItemIds(
+            List<Long> itemIds, LocalDateTime dt);
 
-    Optional<Booking> findFirstByItemIdAndStartDtAfterAndStatusIsNotOrderByStartDtAscIdAsc(
-            Long itemId, LocalDateTime dt, BookingStatus status);
+    @Query("select b " +
+            "from Booking as b " +
+            "inner join b.item as i " +
+            "where " +
+            "i.id in (?1) " +
+            "and b.startDt > ?2 " +
+            "and b.status != 'REJECTED'")
+    List<Booking> findNextBookingByItemIds(
+            List<Long> itemIds, LocalDateTime dt);
 
-    Optional<Booking> findFirstByItemIdAndBookerIdAndEndDtBeforeAndStatusIsNot(
-            Long itemId, Long userId, LocalDateTime dt, BookingStatus status);
+    @Query("select b " +
+            "from Booking as b " +
+            "inner join b.item as i " +
+            "inner join b.booker as u " +
+            "where " +
+            "i.id = ?1 " +
+            "and u.id = ?2 " +
+            "and b.endDt < ?3 " +
+            "and b.status != 'REJECTED' ")
+    List<Booking> findBookingForAllowCommentPageable(
+            Long itemId, Long userId, LocalDateTime dt, Pageable pageable);
 }

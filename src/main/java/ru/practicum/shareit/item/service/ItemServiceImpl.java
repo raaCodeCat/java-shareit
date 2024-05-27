@@ -2,9 +2,10 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingShortView;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -27,9 +28,10 @@ import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с {@link Item}.
@@ -53,14 +55,13 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemView> getUserItems(Long userId) {
         log.info("Запрошен список вещей пользователя с id = {}", userId);
 
-        List<ItemView> items = ItemMapper.toItemView(itemRepository.findItemsByOwnerIdOrderById(userId));
+        List<ItemView> itemViews = ItemMapper.toItemView(
+                itemRepository.findItemsByOwnerIdOrderById(userId));
 
-        for (ItemView item : items) {
-            addBookingInfoToItemView(item);
-            addCommentsToItemView(item);
-        }
+        addBookingInfoToItemViewList(itemViews);
+        addCommentsToItemViewList(itemViews);
 
-        return items;
+        return itemViews;
     }
 
     @Override
@@ -71,13 +72,15 @@ public class ItemServiceImpl implements ItemService {
         Item item = findItemById(itemId);
         ItemView itemView = ItemMapper.toItemView(findItemById(itemId));
 
+        List<ItemView> itemViews = List.of(itemView);
+
         if (Objects.equals(userId, item.getOwner().getId())) {
-            addBookingInfoToItemView(itemView);
+            addBookingInfoToItemViewList(itemViews);
         }
 
-        addCommentsToItemView(itemView);
+        addCommentsToItemViewList(itemViews);
 
-        return itemView;
+        return itemViews.get(0);
     }
 
     @Override
@@ -90,8 +93,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         return ItemMapper.toItemView(
-                itemRepository.findItemsByAvailableIsTrueAndNameContainingIgnoreCaseOrAvailableIsTrueAndDescriptionContainingIgnoreCase(
-                        searchText, searchText));
+                itemRepository.findItemBySearchText(searchText));
     }
 
     @Override
@@ -146,12 +148,12 @@ public class ItemServiceImpl implements ItemService {
         LocalDateTime dateTime = LocalDateTime.now();
         User user = findUserById(userId);
         Item item = findItemById(itemId);
+        Pageable pageable = PageRequest.of(0, 1);
 
-        Optional<Booking> bookingOpt = bookingRepository.findFirstByItemIdAndBookerIdAndEndDtBeforeAndStatusIsNot(
-                itemId, userId, dateTime, BookingStatus.REJECTED
-        );
+        List<Booking> bookingForAllowComment = bookingRepository.findBookingForAllowCommentPageable(
+                itemId, userId, dateTime, pageable);
 
-        if (bookingOpt.isEmpty()) {
+        if (bookingForAllowComment.size() == 0) {
             throw new BadRequestException(
                     String.format("У пользователя нет завершенного бронирования вещи с идентификатором %d", itemId)
             );
@@ -172,26 +174,43 @@ public class ItemServiceImpl implements ItemService {
                 new NotFoundException(String.format("Пользователь c идентификатором %d не найдена", userId)));
     }
 
-    private void addBookingInfoToItemView(ItemView item) {
-        BookingShortView lastBooking = bookingRepository
-                .findFirstByItemIdAndStartDtBeforeAndStatusIsNotOrderByEndDtDescIdAsc(
-                        item.getId(), LocalDateTime.now(), BookingStatus.REJECTED)
-                .map(BookingMapper::toBookingShortView)
-                .orElse(null);
+    private void addBookingInfoToItemViewList(List<ItemView> items) {
+        List<Long> itemIds = items.stream().map(ItemView::getId).collect(Collectors.toList());
 
-        BookingShortView nextBooking  = bookingRepository
-                .findFirstByItemIdAndStartDtAfterAndStatusIsNotOrderByStartDtAscIdAsc(
-                        item.getId(), LocalDateTime.now(), BookingStatus.REJECTED)
-                .map(BookingMapper::toBookingShortView)
-                .orElse(null);
+        List<Booking> lastBookings = bookingRepository.findLastBookingByItemIds(
+                itemIds, LocalDateTime.now());
 
-        item.setLastBooking(lastBooking);
-        item.setNextBooking(nextBooking);
+        List<Booking> nextBookings = bookingRepository.findNextBookingByItemIds(
+                itemIds, LocalDateTime.now());
+
+        for (ItemView item : items) {
+            BookingShortView lastBooking = lastBookings.stream()
+                    .filter(booking -> item.getId().equals(booking.getItem().getId()))
+                    .max(Comparator.comparing(Booking::getEndDt))
+                    .map(BookingMapper::toBookingShortView).orElse(null);
+
+            BookingShortView nextBooking = nextBookings.stream()
+                    .filter(booking -> item.getId().equals(booking.getItem().getId()))
+                    .min(Comparator.comparing(Booking::getStartDt))
+                    .map(BookingMapper::toBookingShortView).orElse(null);
+
+            item.setLastBooking(lastBooking);
+            item.setNextBooking(nextBooking);
+        }
     }
 
-    private void addCommentsToItemView(ItemView item) {
-        List<Comment> comments;
-        comments = commentRepository.findByItemIdOrderByCreatedAsc(item.getId());
-        item.setComments(CommentMapper.toCommentView(comments));
+    private void addCommentsToItemViewList(List<ItemView> items) {
+        List<Long> itemIds = items.stream().map(ItemView::getId).collect(Collectors.toList());
+
+        List<Comment> comments = commentRepository.findCommentByIds(itemIds);
+
+        for (ItemView item : items) {
+            List<CommentView> commentViews = comments.stream()
+                    .filter(comment -> item.getId().equals(comment.getItem().getId()))
+                    .sorted(Comparator.comparing(Comment::getCreated))
+                    .map(CommentMapper::toCommentView).collect(Collectors.toList());
+
+            item.setComments(commentViews);
+        }
     }
 }

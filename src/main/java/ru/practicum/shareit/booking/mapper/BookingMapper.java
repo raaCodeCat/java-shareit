@@ -1,5 +1,7 @@
 package ru.practicum.shareit.booking.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.dto.BookingRequest;
 import ru.practicum.shareit.booking.dto.BookingShortView;
 import ru.practicum.shareit.booking.dto.BookingView;
@@ -10,6 +12,7 @@ import ru.practicum.shareit.shareitutils.dto.IdNameFieldView;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BookingMapper {
     public static BookingView toBookingView(Booking source) {
         return new BookingView(
