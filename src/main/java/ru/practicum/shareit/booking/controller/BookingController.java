@@ -2,6 +2,8 @@ package ru.practicum.shareit.booking.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +19,8 @@ import ru.practicum.shareit.booking.dto.BookingView;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.booking.model.Booking;
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -27,6 +31,7 @@ import java.util.List;
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class BookingController {
     private static final String USER = "X-Sharer-User-Id";
 
@@ -36,55 +41,59 @@ public class BookingController {
      * Получение информации о бронировании по идентификатору (id).
      */
     @GetMapping("/{bookingId}")
-    public BookingView getBooking(@RequestHeader(USER) Long userId,
+    public ResponseEntity<BookingView> getBooking(@RequestHeader(USER) Long userId,
                                   @PathVariable Long bookingId) {
         log.info("Получен запрос GET /bookings/{} от пользователя {}.", bookingId, userId);
 
-        return bookingService.getBooking(userId, bookingId);
+        return ResponseEntity.ok(bookingService.getBooking(userId, bookingId));
     }
 
     /**
      * Получение списка бронирований пользователя.
      */
     @GetMapping
-    public List<BookingView> getBookingsByBooker(@RequestHeader(USER) Long userId,
-                                                 @RequestParam(defaultValue = "ALL") BookingState state) {
+    public ResponseEntity<List<BookingView>> getBookingsByBooker(@RequestHeader(USER) Long userId,
+                                                 @RequestParam(defaultValue = "ALL") BookingState state,
+                                                 @RequestParam(required = false) @Min(0) Integer from,
+                                                 @RequestParam(required = false) @Min(1) @Max(20) Integer size) {
         log.info("Получен запрос GET /bookings со статусом {} от пользователя {}.", state, userId);
 
-        return bookingService.getBookingsByBooker(userId, state);
+        return ResponseEntity.ok(bookingService.getBookingsByBooker(userId, state, from, size));
     }
 
     /**
      * Получение списка бронирований для владельца вещей.
      */
     @GetMapping("/owner")
-    public List<BookingView> getBookingsByOwner(@RequestHeader(USER) Long userId,
-                                                 @RequestParam(defaultValue = "ALL") BookingState state) {
+    public ResponseEntity<List<BookingView>> getBookingsByOwner(@RequestHeader(USER) Long userId,
+                                                @RequestParam(defaultValue = "ALL") BookingState state,
+                                                @RequestParam(required = false) @Min(0) Integer from,
+                                                @RequestParam(required = false) @Min(1) @Max(20) Integer size) {
         log.info("Получен запрос GET /bookings/owner со статусом {} от пользователя {}.", state, userId);
 
-        return bookingService.getBookingsByOwner(userId, state);
+        return ResponseEntity.ok(bookingService.getBookingsByOwner(userId, state, from, size));
     }
 
     /**
      * Добавление нового бронирования.
      */
     @PostMapping
-    public BookingView addBooking(@RequestHeader(USER) Long userId,
+    public ResponseEntity<BookingView> addBooking(@RequestHeader(USER) Long userId,
                                   @RequestBody @Valid BookingRequest bookingDto) {
         log.info("Получен запрос POST /bookings от пользователя {}.", userId);
 
-        return bookingService.create(userId, bookingDto);
+        return ResponseEntity.ok(bookingService.create(userId, bookingDto));
     }
 
     /**
      * Одобрение или отклонение нового бронирования.
      */
     @PatchMapping("/{bookingId}")
-    public BookingView approveBooking(@RequestHeader(USER) Long userId,
+    public ResponseEntity<BookingView> approveBooking(@RequestHeader(USER) Long userId,
                                       @PathVariable Long bookingId,
                                       @RequestParam @NotNull Boolean approved) {
         log.info("Получен запрос PATCH /bookings/{} от пользователя {}", bookingId, userId);
 
-        return bookingService.approveBooking(userId, bookingId, approved);
+        return ResponseEntity.ok(bookingService.approveBooking(userId, bookingId, approved));
     }
 }

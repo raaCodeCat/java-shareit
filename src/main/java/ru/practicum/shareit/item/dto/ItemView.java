@@ -1,11 +1,14 @@
 package ru.practicum.shareit.item.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.shareit.booking.dto.BookingShortView;
 import ru.practicum.shareit.item.model.Item;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,6 +17,8 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode
 public class ItemView {
     /**
      * Идентификатор вещи.
@@ -48,6 +53,11 @@ public class ItemView {
     /**
      * Отзывы.
      */
-    private List<CommentView> comments;
+    private List<CommentView> comments = new ArrayList<>();
+
+    /**
+     * Идентификатор запроса.
+     */
+    private Long requestId;
 }
 

@@ -1,10 +1,12 @@
 package ru.practicum.shareit.item.model;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,6 +28,7 @@ import javax.persistence.Table;
 @ToString
 @Entity
 @Table(name = "items")
+@EqualsAndHashCode
 public class Item {
     /**
      * Идентификатор вещи.
@@ -59,4 +62,11 @@ public class Item {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User owner;
+
+    /**
+     * Запрос, по которому была добавлена вещь.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id")
+    private ItemRequest request;
 }

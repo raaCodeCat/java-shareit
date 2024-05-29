@@ -2,6 +2,8 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingState;
@@ -49,22 +51,38 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingView> getBookingsByBooker(Long userId, BookingState state) {
+    public List<BookingView> getBookingsByBooker(Long userId, BookingState state, Integer from, Integer size) {
         log.info("Запрос списка бронирований со статусом {} пользователем с идентификатором {}", state, userId);
 
         findUserById(userId);
 
-        return BookingMapper.toBookingView(bookingRepository.getBookingsByBooker(userId, state.name()));
+        if (from == null || size == null) {
+            return BookingMapper.toBookingView(bookingRepository.getBookingsByBooker(userId, state.name()));
+        } else {
+            int page = from / size;
+            Pageable pageable = PageRequest.of(page, size);
+
+            return BookingMapper.toBookingView(bookingRepository.getBookingsByBookerPageable(userId, state.name(),
+                    pageable));
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingView> getBookingsByOwner(Long userId, BookingState state) {
+    public List<BookingView> getBookingsByOwner(Long userId, BookingState state, Integer from, Integer size) {
         log.info("Запрос списка бронирований со статусом {} владельцем с идентификатором {}", state, userId);
 
         findUserById(userId);
 
-        return BookingMapper.toBookingView(bookingRepository.getBookingsByOwner(userId, state.name()));
+        if (from == null || size == null) {
+            return BookingMapper.toBookingView(bookingRepository.getBookingsByOwner(userId, state.name()));
+        } else {
+            int page = from / size;
+            Pageable pageable = PageRequest.of(page, size);
+
+            return BookingMapper.toBookingView(bookingRepository.getBookingsByOwnerPageable(userId, state.name(),
+                    pageable));
+        }
     }
 
     @Override
@@ -124,7 +142,7 @@ public class BookingServiceImpl implements BookingService {
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException(String.format("Пользователь c идентификатором %d не найдена", userId)));
+                new NotFoundException(String.format("Пользователь с идентификатором %d не найден", userId)));
     }
 
     private Item findItemById(Long itemId) {

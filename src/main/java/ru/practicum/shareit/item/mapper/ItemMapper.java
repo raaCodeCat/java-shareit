@@ -2,7 +2,8 @@ package ru.practicum.shareit.item.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.item.dto.ItemRequest;
+import ru.practicum.shareit.item.dto.ItemCreateUpdateDto;
+import ru.practicum.shareit.item.dto.ItemResponseView;
 import ru.practicum.shareit.item.dto.ItemView;
 import ru.practicum.shareit.item.model.Item;
 import java.util.ArrayList;
@@ -13,7 +14,8 @@ import java.util.stream.Collectors;
 public class ItemMapper {
     public static ItemView toItemView(Item source) {
         return new ItemView(source.getId(), source.getName(), source.getDescription(),
-                source.getAvailable(), null, null, new ArrayList<>());
+                source.getAvailable(), null, null, new ArrayList<>(),
+                source.getRequest() != null ? source.getRequest().getId() : null);
     }
 
     public static List<ItemView> toItemView(List<Item> source) {
@@ -22,8 +24,19 @@ public class ItemMapper {
                 .collect(Collectors.toList());
     }
 
-    public static Item fromItemRequest(ItemRequest source) {
-        return new Item(source.getId(), source.getName(), source.getDescription(),
-                source.getAvailable(), null);
+    public static Item fromItemCreateUpdateDto(ItemCreateUpdateDto source) {
+        return new Item(null, source.getName(), source.getDescription(),
+                source.getAvailable(), null, null);
+    }
+
+    public static ItemResponseView toItemResponseView(Item source) {
+        return new ItemResponseView(source.getId(), source.getName(), source.getDescription(),
+                source.getAvailable(), source.getRequest() != null ? source.getRequest().getId() : null);
+    }
+
+    public static List<ItemResponseView> toItemResponseView(List<Item> source) {
+        return source.stream()
+                .map(ItemMapper::toItemResponseView)
+                .collect(Collectors.toList());
     }
 }

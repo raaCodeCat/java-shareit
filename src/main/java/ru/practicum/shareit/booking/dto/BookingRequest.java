@@ -1,7 +1,9 @@
 package ru.practicum.shareit.booking.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import ru.practicum.shareit.booking.model.Booking;
@@ -16,13 +18,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @ToString
+@EqualsAndHashCode
 public class BookingRequest {
-    /**
-     * Идентификатор бронирования вещи.
-     */
-    private Long id;
-
     /**
      * Идентификатор вещи.
      */

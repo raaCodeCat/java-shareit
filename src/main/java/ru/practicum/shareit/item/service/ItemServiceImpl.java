@@ -14,7 +14,7 @@ import ru.practicum.shareit.exeption.BadRequestException;
 import ru.practicum.shareit.exeption.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentRequest;
 import ru.practicum.shareit.item.dto.CommentView;
-import ru.practicum.shareit.item.dto.ItemRequest;
+import ru.practicum.shareit.item.dto.ItemCreateUpdateDto;
 import ru.practicum.shareit.item.dto.ItemView;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
@@ -22,9 +22,9 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,15 +48,16 @@ public class ItemServiceImpl implements ItemService {
 
     private final CommentRepository commentRepository;
 
-    private final UserService userService;
+    private final ItemRequestRepository itemRequestRepository;
 
     @Override
     @Transactional(readOnly = true)
     public List<ItemView> getUserItems(Long userId) {
         log.info("Запрошен список вещей пользователя с id = {}", userId);
 
+        User user = findUserById(userId);
         List<ItemView> itemViews = ItemMapper.toItemView(
-                itemRepository.findItemsByOwnerIdOrderById(userId));
+                itemRepository.findItemsByOwnerIdOrderById(user.getId()));
 
         addBookingInfoToItemViewList(itemViews);
         addCommentsToItemViewList(itemViews);
@@ -70,7 +71,7 @@ public class ItemServiceImpl implements ItemService {
         log.info("Запрошена вещь с itemId = {}", itemId);
 
         Item item = findItemById(itemId);
-        ItemView itemView = ItemMapper.toItemView(findItemById(itemId));
+        ItemView itemView = ItemMapper.toItemView(item);
 
         List<ItemView> itemViews = List.of(itemView);
 
@@ -98,11 +99,17 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public ItemView create(Long userId, ItemRequest itemRequest) {
-        log.info("Попытка добавить вещь {}", itemRequest);
+    public ItemView create(Long userId, ItemCreateUpdateDto itemCreateUpdateDto) {
+        log.info("Попытка добавить вещь {}", itemCreateUpdateDto);
 
-        User user = UserMapper.fromUserDto(userService.getById(userId));
-        Item item = ItemMapper.fromItemRequest(itemRequest);
+        User user = findUserById(userId);
+        Item item = ItemMapper.fromItemCreateUpdateDto(itemCreateUpdateDto);
+
+        if (itemCreateUpdateDto.getRequestId() != null) {
+            ItemRequest itemRequest = findItemRequestById(itemCreateUpdateDto.getRequestId());
+            item.setRequest(itemRequest);
+        }
+
         item.setOwner(user);
 
         return ItemMapper.toItemView(itemRepository.save(item));
@@ -110,16 +117,16 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public ItemView update(Long userId, ItemRequest itemRequest) {
-        log.info("Попытка обновить вещь {}", itemRequest);
+    public ItemView update(Long userId, Long itemId, ItemCreateUpdateDto itemCreateUpdateDto) {
+        log.info("Попытка обновить вещь {}", itemCreateUpdateDto);
 
-        Long itemId = itemRequest.getId();
-        String newName = itemRequest.getName();
-        String newDescription = itemRequest.getDescription();
-        Boolean newAvailable = itemRequest.getAvailable();
         Item itemForUpdate = findItemById(itemId);
+        User user = findUserById(userId);
+        String newName = itemCreateUpdateDto.getName();
+        String newDescription = itemCreateUpdateDto.getDescription();
+        Boolean newAvailable = itemCreateUpdateDto.getAvailable();
 
-        if (!Objects.equals(itemForUpdate.getOwner().getId(), userId)) {
+        if (!Objects.equals(itemForUpdate.getOwner().getId(), user.getId())) {
             throw new NotFoundException(
                     String.format("Пользователь не владеет вещью с идентификатором %d", itemId)
             );
@@ -171,7 +178,12 @@ public class ItemServiceImpl implements ItemService {
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException(String.format("Пользователь c идентификатором %d не найдена", userId)));
+                new NotFoundException(String.format("Пользователь с идентификатором %d не найден", userId)));
+    }
+
+    private ItemRequest findItemRequestById(Long itemRequestId) {
+        return itemRequestRepository.findById(itemRequestId).orElseThrow(() ->
+                new NotFoundException(String.format("Запрос вещи с идентификатором %d не найден", itemRequestId)));
     }
 
     private void addBookingInfoToItemViewList(List<ItemView> items) {
@@ -202,7 +214,7 @@ public class ItemServiceImpl implements ItemService {
     private void addCommentsToItemViewList(List<ItemView> items) {
         List<Long> itemIds = items.stream().map(ItemView::getId).collect(Collectors.toList());
 
-        List<Comment> comments = commentRepository.findCommentByIds(itemIds);
+        List<Comment> comments = commentRepository.findCommentsByItemIds(itemIds);
 
         for (ItemView item : items) {
             List<CommentView> commentViews = comments.stream()
