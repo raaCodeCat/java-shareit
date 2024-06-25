@@ -51,7 +51,6 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRequestRepository itemRequestRepository;
 
     @Override
-    @Transactional(readOnly = true)
     public List<ItemView> getUserItems(Long userId) {
         log.info("Запрошен список вещей пользователя с id = {}", userId);
 
@@ -66,7 +65,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ItemView getItemById(Long userId, Long itemId) {
         log.info("Запрошена вещь с itemId = {}", itemId);
 
@@ -85,7 +83,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ItemView> searchItems(String searchText) {
         log.info("Запрошен поиск вещей по тексту = \"{}\"", searchText);
 

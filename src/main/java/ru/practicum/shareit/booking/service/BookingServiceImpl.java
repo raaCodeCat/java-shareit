@@ -32,7 +32,6 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
 
     @Override
-    @Transactional(readOnly = true)
     public BookingView getBooking(Long userId, long bookingId) {
         log.info("Получений информации о бронировании с идентификатором {}", bookingId);
 
@@ -50,7 +49,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BookingView> getBookingsByBooker(Long userId, BookingState state, Integer from, Integer size) {
         log.info("Запрос списка бронирований со статусом {} пользователем с идентификатором {}", state, userId);
 
@@ -68,7 +66,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BookingView> getBookingsByOwner(Long userId, BookingState state, Integer from, Integer size) {
         log.info("Запрос списка бронирований со статусом {} владельцем с идентификатором {}", state, userId);
 

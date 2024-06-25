@@ -23,7 +23,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    @Transactional(readOnly = true)
     public List<UserDto> get() {
         log.info("Запрошен список всех пользователей");
 
@@ -31,7 +30,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public UserDto getById(Long id) {
         log.info("Запрошен пользователь с id = {}", id);
 
