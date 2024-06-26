@@ -34,7 +34,7 @@ public class BookingMapper {
         Item item = new Item();
         item.setId(source.getItemId());
 
-        return new Booking(source.getId(), source.getStart(), source.getEnd(), item, null, null);
+        return new Booking(null, source.getStart(), source.getEnd(), item, null, null);
     }
 
     public static BookingShortView toBookingShortView(Booking source) {

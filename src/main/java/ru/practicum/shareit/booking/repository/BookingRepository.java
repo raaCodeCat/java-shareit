@@ -26,6 +26,22 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("select b " +
             "from Booking as b " +
+            "inner join b.booker as u " +
+            "where " +
+            "u.id = ?1 " +
+            "and (" +
+            "?2 = 'ALL'" +
+            "or ?2 = 'CURRENT' and current_timestamp() between b.startDt and b.endDt " +
+            "or ?2 = 'PAST' and b.endDt < current_timestamp() " +
+            "or ?2 = 'FUTURE' and b.startDt > current_timestamp() " +
+            "or ?2 = 'WAITING' and b.status = 'WAITING' " +
+            "or ?2 = 'REJECTED' and b.status = 'REJECTED' " +
+            ") " +
+            "order by b.startDt desc")
+    List<Booking> getBookingsByBookerPageable(Long userId, String state, Pageable pageable);
+
+    @Query("select b " +
+            "from Booking as b " +
             "inner join b.item as i " +
             "inner join i.owner as o " +
             "where " +
@@ -40,6 +56,23 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             ") " +
             "order by b.startDt desc")
     List<Booking> getBookingsByOwner(Long userId, String state);
+
+    @Query("select b " +
+            "from Booking as b " +
+            "inner join b.item as i " +
+            "inner join i.owner as o " +
+            "where " +
+            "o.id = ?1 " +
+            "and (" +
+            "?2 = 'ALL'" +
+            "or ?2 = 'CURRENT' and current_timestamp() between b.startDt and b.endDt " +
+            "or ?2 = 'PAST' and b.endDt < current_timestamp() " +
+            "or ?2 = 'FUTURE' and b.startDt > current_timestamp() " +
+            "or ?2 = 'WAITING' and b.status = 'WAITING' " +
+            "or ?2 = 'REJECTED' and b.status = 'REJECTED' " +
+            ") " +
+            "order by b.startDt desc")
+    List<Booking> getBookingsByOwnerPageable(Long userId, String state, Pageable pageable);
 
     @Query("select b " +
             "from Booking as b " +
@@ -69,7 +102,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "i.id = ?1 " +
             "and u.id = ?2 " +
             "and b.endDt < ?3 " +
-            "and b.status != 'REJECTED' ")
+            "and b.status != 'REJECTED' " +
+            "and b.status != 'WAITING'")
     List<Booking> findBookingForAllowCommentPageable(
             Long itemId, Long userId, LocalDateTime dt, Pageable pageable);
 }

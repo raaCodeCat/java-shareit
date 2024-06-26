@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,42 +31,42 @@ public class UserController {
      * Получение списка всех пользователей.
      */
     @GetMapping
-    public List<UserDto> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         log.info("Получен запрос GET /users.");
 
-        return userService.get();
+        return ResponseEntity.ok(userService.get());
     }
 
     /**
      * Получение пользователя по идентификатору (id).
      */
     @GetMapping("/{id}")
-    public UserDto getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         log.info("Получен запрос GET /users/{}.", id);
 
-        return userService.getById(id);
+        return ResponseEntity.ok(userService.getById(id));
     }
 
     /**
      * Создание пользователя.
      */
     @PostMapping
-    public UserDto addUser(@RequestBody @Valid UserDto userDto) {
+    public ResponseEntity<UserDto> addUser(@RequestBody @Valid UserDto userDto) {
         log.info("Получен запрос POST /users.");
 
-        return userService.create(userDto);
+        return ResponseEntity.ok(userService.create(userDto));
     }
 
     /**
      * Обновление пользователя.
      */
     @PatchMapping("/{id}")
-    public UserDto updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
         log.info("Получен запрос PATCH /users/{}.", id);
 
         userDto.setId(id);
 
-        return userService.update(userDto);
+        return ResponseEntity.ok(userService.update(userDto));
     }
 
     /**

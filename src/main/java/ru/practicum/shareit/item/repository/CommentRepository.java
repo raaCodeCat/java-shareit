@@ -14,5 +14,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             "inner join c.item as i " +
             "where " +
             "i.id in ?1")
-    List<Comment> findCommentByIds(List<Long> itemIds);
+    List<Comment> findCommentsByItemIds(List<Long> itemIds);
 }

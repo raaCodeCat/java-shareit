@@ -20,6 +20,6 @@ public class UserMapper {
     }
 
     public static User fromUserDto(UserDto source) {
-        return new User(source.getId(), source.getName(), source.getEmail());
+        return new User(null, source.getName(), source.getEmail());
     }
 }

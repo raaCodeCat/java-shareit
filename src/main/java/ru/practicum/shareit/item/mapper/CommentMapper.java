@@ -11,7 +11,7 @@ public class CommentMapper {
         return new CommentView(
                 source.getId(),
                 source.getText(),
-                source.getUser().getName(),
+                source.getUser() != null ? source.getUser().getName() : null,
                 source.getCreated());
     }
 }

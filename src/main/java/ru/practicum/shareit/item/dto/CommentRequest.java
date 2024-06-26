@@ -1,6 +1,9 @@
 package ru.practicum.shareit.item.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.validator.constraints.Length;
@@ -13,6 +16,9 @@ import javax.validation.constraints.NotBlank;
 @Getter
 @Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode
 public class CommentRequest {
     @NotBlank
     @Length(max = 1024)

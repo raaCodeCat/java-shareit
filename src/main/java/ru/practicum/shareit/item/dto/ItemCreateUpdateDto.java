@@ -1,7 +1,9 @@
 package ru.practicum.shareit.item.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
@@ -13,12 +15,9 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ItemRequest {
-    /**
-     * Идентификатор вещи.
-     */
-    private Long id;
-
+@NoArgsConstructor
+@EqualsAndHashCode
+public class ItemCreateUpdateDto {
     /**
      * Краткое название.
      */
@@ -36,4 +35,9 @@ public class ItemRequest {
      */
     @NotNull
     private Boolean available;
+
+    /**
+     * Идентификатор запроса.
+     */
+    private Long requestId;
 }
